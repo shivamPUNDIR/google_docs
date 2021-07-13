@@ -10,17 +10,38 @@ import Modal from '@material-tailwind/react/Modal'
 import ModalBody from '@material-tailwind/react/ModalBody'
 import ModalFooter from '@material-tailwind/react/ModalFooter'
 import { useState } from 'react'
+import firebase from 'firebase'
+import { db } from '../firebase'
+import { useCollectionOnce } from 'react-firebase-hooks/firestore'
+import DocumentRow from '../components/DocumentRow'
 
 export default function Home() {
   const [session] = useSession();
-  const [showModal, setShowModal] = useState(false)
-  const [input, setInput] = useState('')
+  const [snapshot] =
+    useCollectionOnce(
+      db
+        .collection('userDocs')
+        .doc(session.user.email)
+        .collection('docs')
+        .orderBy('timestamp', 'desc'
+        ));
 
-  const createDocument =()=>{
-
+  const createDocument = () => {
+    if (!input) return;
+    db
+      .collection('userDocs')
+      .doc(session.user.email)
+      .collection('docs')
+      .add({
+        filename: input,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    setInput('');
+    setShowModal(false);
   }
   if (!session) return <Login />
-
+  const [showModal, setShowModal] = useState(false)
+  const [input, setInput] = useState('')
   const modal = (
     <Modal size="sm"
       active={showModal}
@@ -37,14 +58,14 @@ export default function Home() {
         <Button color='blue'
           buttonType='link'
           ripple='dark'
-          onClick={(e)=>setShowModal(false)}
-          >
+          onClick={(e) => setShowModal(false)}
+        >
           Cancel
         </Button>
         <Button color='blue'
           ripple='light'
           onClick={createDocument}
-          >
+        >
           Create
         </Button>
       </ModalFooter>
@@ -56,7 +77,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Header />
-      { modal}
+      {modal}
       <section className='bg-[#F8F9FA] pb-10 px-10'>
         <div className='max-w-3xl mx-auto'>
           <div className='flex items-center justify-between py-6'>
@@ -88,10 +109,22 @@ export default function Home() {
             <p className='mr-12'>Date Created</p>
             <Icon name='folder' size='3xl' color='gray' />
           </div>
+        
+        {snapshot?.docs.map((e) => {
+         
+          return <DocumentRow
+            key={e.id}
+            id={e.id}
+            filename={e.data().filename}
+            date={e.data().timestamp}
+          />
+
+
+        })}
         </div>
       </section>
     </div>
-   
+
 
   )
 }
