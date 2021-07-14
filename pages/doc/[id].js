@@ -7,7 +7,7 @@ import { useDocumentOnce } from 'react-firebase-hooks/firestore'
 import { getSession, signOut, useSession } from 'next-auth/client'
 import Login from '../../components/Login'
 import TextEditor from '../../components/TextEditor'
-const Doc = () => {
+const Doc = (props) => {
     const [session] = useSession();
     if (!session) return <Login />
 
@@ -15,8 +15,8 @@ const Doc = () => {
     const { id } = router.query;
     const [snapshot, loading] = useDocumentOnce(db.collection('userDocs').doc(session.user.email).collection('docs').doc(id))
 
-    if (loading && !snapshot?.data()?.filename)
-        router.replace('/')
+    if (loading && props.filename!==snapshot?.data()?.filename)
+        {router.replace('/')}
     return (
         <div>
             <header className='flex justify-between items-center p-3 pb-1'>
